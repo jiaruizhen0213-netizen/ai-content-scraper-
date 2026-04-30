@@ -1,109 +1,95 @@
 #!/usr/bin/env python3
 """
-飞书消息推送模块
+飞书消息推送模块（使用官方 SDK）
 支持向指定用户发送消息卡片
 """
 
 import os
 import json
-import requests
 from datetime import datetime
 from typing import List, Dict
+
+try:
+    from lark_oapi.api.bot.v1 import *
+    from lark_oapi.api.auth.v3 import *
+    from lark_oapi import *
+except ImportError:
+    print("请安装飞书官方 SDK: pip install lark-oapi")
+    raise
 
 
 class FeishuNotifier:
     def __init__(self, app_id: str, app_secret: str, user_open_id: str):
-        self.app_id = app_id
-        self.app_secret = app_secret
-        self.user_open_id = user_open_id
-        self.tenant_access_token = None
-        self.api_base = "https://open.feishu.cn/open-apis"
+        # 清理可能的空格和换行符
+        self.app_id = app_id.strip() if app_id else ""
+        self.app_secret = app_secret.strip() if app_secret else ""
+        self.user_open_id = user_open_id.strip() if user_open_id else ""
 
-    def get_tenant_access_token(self) -> str:
-        """获取 app_access_token (自建应用)"""
-        url = f"{self.api_base}/auth/v3/app_access_token/internal"
-        payload = {
-            "app_id": self.app_id,
-            "app_secret": self.app_secret
-        }
-
-        print(f"🔑 正在获取飞书 app_access_token...")
-        print(f"   请求 URL: {url}")
-        print(f"   App ID: {self.app_id[:10]}...")
-        print(f"   App Secret 长度: {len(self.app_secret)}")
-
-        headers = {
-            "Content-Type": "application/json"
-        }
-
-        print(f"   请求头: {headers}")
-        print(f"   请求体: app_id={self.app_id[:10]}..., app_secret=***")
-
-        response = requests.post(url, json=payload, headers=headers)
-
-        print(f"   响应状态码: {response.status_code}")
-        print(f"   响应内容: {response.text[:500]}")
-
-        data = response.json()
-
-        print(f"   API 响应: code={data.get('code')}, msg={data.get('msg')}")
-
-        if data.get("code") != 0:
-            error_msg = data.get('msg', 'unknown error')
-            print(f"❌ 飞书 API 错误:")
-            print(f"   错误码: {data.get('code')}")
-            print(f"   错误信息: {error_msg}")
-            print(f"   完整响应: {data}")
-            raise Exception(f"Failed to get app_access_token: {data}")
-
-        self.tenant_access_token = data.get("app_access_token")
-        print(f"✅ 获取 token 成功")
-        return self.tenant_access_token
+        # 创建客户端
+        self.client = Client.builder() \
+            .app_id(self.app_id) \
+            .app_secret(self.app_secret) \
+            .build()
 
     def send_text_message(self, content: str) -> dict:
         """发送纯文本消息"""
-        if not self.tenant_access_token:
-            self.get_tenant_access_token()
+        try:
+            request = CreateMessageRequest.builder() \
+                .receive_id_type("open_id") \
+                .request_body(CreateMessageRequestBody.builder()
+                    .receive_id(self.user_open_id)
+                    .msg_type("text")
+                    .content(json.dumps({"text": content}))
+                    .build()) \
+                .build()
 
-        url = f"{self.api_base}/im/v1/messages?receive_id_type=open_id"
-        headers = {
-            "Authorization": f"Bearer {self.tenant_access_token}",
-            "Content-Type": "application/json"
-        }
+            response = self.client.message.v1.message.create(request)
 
-        payload = {
-            "receive_id": self.user_open_id,
-            "msg_type": "text",
-            "content": json.dumps({"text": content})
-        }
-
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+            if response.success():
+                return {"code": 0, "msg": "success"}
+            else:
+                return {
+                    "code": response.code,
+                    "msg": response.msg,
+                    "error": response.error
+                }
+        except Exception as e:
+            return {"code": -1, "msg": str(e)}
 
     def send_card_message(self, elements: List[Dict]) -> dict:
         """发送消息卡片"""
-        if not self.tenant_access_token:
-            self.get_tenant_access_token()
+        try:
+            card_content = {
+                "config": {"wide_screen_mode": True},
+                "elements": elements
+            }
 
-        url = f"{self.api_base}/im/v1/messages?receive_id_type=open_id"
-        headers = {
-            "Authorization": f"Bearer {self.tenant_access_token}",
-            "Content-Type": "application/json"
-        }
+            request = CreateMessageRequest.builder() \
+                .receive_id_type("open_id") \
+                .request_body(CreateMessageRequestBody.builder()
+                    .receive_id(self.user_open_id)
+                    .msg_type("interactive")
+                    .content(json.dumps(card_content))
+                    .build()) \
+                .build()
 
-        card_content = {
-            "config": {"wide_screen_mode": True},
-            "elements": elements
-        }
+            response = self.client.message.v1.message.create(request)
 
-        payload = {
-            "receive_id": self.user_open_id,
-            "msg_type": "interactive",
-            "content": json.dumps(card_content)
-        }
+            print(f"📤 飞书 API 响应:")
+            print(f"   code: {response.code}")
+            print(f"   msg: {response.msg}")
 
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+            if response.success():
+                return {"code": 0, "msg": "success"}
+            else:
+                return {
+                    "code": response.code,
+                    "msg": response.msg,
+                    "error": response.error
+                }
+        except Exception as e:
+            print(f"❌ 发送消息卡片异常: {e}")
+            return {"code": -1, "msg": str(e)}
 
     def send_ai_news(self, articles: List[Dict]) -> dict:
         """发送 AI 资讯消息卡片"""
@@ -155,6 +141,7 @@ class FeishuNotifier:
                 }
             ])
 
+        print(f"📤 准备发送 {len(articles)} 条资讯")
         return self.send_card_message(elements)
 
 
@@ -168,6 +155,10 @@ def main():
         print("❌ 缺少必要的环境变量")
         return
 
+    print(f"🔧 初始化飞书通知器:")
+    print(f"   App ID: {app_id[:10]}...")
+    print(f"   User Open ID: {user_open_id[:10]}...")
+
     notifier = FeishuNotifier(app_id, app_secret, user_open_id)
 
     # 测试发送消息
@@ -180,6 +171,7 @@ def main():
         }
     ]
 
+    print("📤 发送测试消息...")
     result = notifier.send_ai_news(test_articles)
     print(f"发送结果: {result}")
 
