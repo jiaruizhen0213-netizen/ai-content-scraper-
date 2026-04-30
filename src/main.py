@@ -25,6 +25,11 @@ def main():
     app_secret = os.getenv("FEISHU_APP_SECRET")
     user_open_id = os.getenv("FEISHU_USER_OPEN_ID")
 
+    print(f"🔧 环境变量检查:")
+    print(f"   FEISHU_APP_ID: {'已设置 (' + app_id[:10] + '...)' if app_id else '未设置'}")
+    print(f"   FEISHU_APP_SECRET: {'已设置' if app_secret else '未设置'}")
+    print(f"   FEISHU_USER_OPEN_ID: {'已设置 (' + user_open_id[:10] + '...)' if user_open_id else '未设置'}")
+
     if not all([app_id, app_secret, user_open_id]):
         print("❌ 缺少必要的环境变量")
         print("请检查 GitHub Secrets 配置")
