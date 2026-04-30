@@ -27,13 +27,24 @@ class FeishuNotifier:
             "app_secret": self.app_secret
         }
 
+        print(f"🔑 正在获取飞书 access_token...")
+        print(f"   App ID: {self.app_id[:10]}...")
+
         response = requests.post(url, json=payload)
         data = response.json()
 
+        print(f"   API 响应: code={data.get('code')}, msg={data.get('msg')}")
+
         if data.get("code") != 0:
+            error_msg = data.get('msg', 'unknown error')
+            print(f"❌ 飞书 API 错误:")
+            print(f"   错误码: {data.get('code')}")
+            print(f"   错误信息: {error_msg}")
+            print(f"   完整响应: {data}")
             raise Exception(f"Failed to get tenant_access_token: {data}")
 
         self.tenant_access_token = data.get("tenant_access_token")
+        print(f"✅ 获取 token 成功")
         return self.tenant_access_token
 
     def send_text_message(self, content: str) -> dict:
