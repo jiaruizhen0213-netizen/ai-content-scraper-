@@ -28,9 +28,22 @@ class FeishuNotifier:
         }
 
         print(f"🔑 正在获取飞书 app_access_token...")
+        print(f"   请求 URL: {url}")
         print(f"   App ID: {self.app_id[:10]}...")
+        print(f"   App Secret 长度: {len(self.app_secret)}")
 
-        response = requests.post(url, json=payload)
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        print(f"   请求头: {headers}")
+        print(f"   请求体: app_id={self.app_id[:10]}..., app_secret=***")
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        print(f"   响应状态码: {response.status_code}")
+        print(f"   响应内容: {response.text[:500]}")
+
         data = response.json()
 
         print(f"   API 响应: code={data.get('code')}, msg={data.get('msg')}")
