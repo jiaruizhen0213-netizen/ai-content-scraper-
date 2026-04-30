@@ -26,38 +26,6 @@ class ContentScraper:
         with open(config_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
 
-    def translate_to_chinese(self, text: str) -> str:
-        """翻译文本到中文（简单实现）"""
-        if not text:
-            return text
-
-        # 检查是否已经是中文
-        chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
-        if chinese_chars > len(text) * 0.3:
-            return text  # 已经是中文，不需要翻译
-
-        try:
-            # 使用 LibreTranslate (免费翻译服务)
-            url = "https://libretranslate.com/translate"
-            payload = {
-                "q": text,
-                "source": "en",
-                "target": "zh",
-                "format": "text"
-            }
-
-            response = requests.post(url, json=payload, timeout=5)
-            result = response.json()
-
-            if response.status_code == 200 and "translatedText" in result:
-                return result["translatedText"]
-            else:
-                # 翻译失败，返回原文
-                return text
-        except:
-            # 翻译服务不可用，返回原文
-            return text
-
     def scrape_rss_feeds(self) -> List[Dict]:
         """抓取 RSS feeds"""
         articles = []
@@ -82,13 +50,8 @@ class ContentScraper:
                         if pub_date < datetime.now() - timedelta(days=self.since_days):
                             continue
 
-                    # 获取原始标题
-                    original_title = entry.get('title', '无标题')
-                    # 翻译标题到中文
-                    translated_title = self.translate_to_chinese(original_title)
-
                     articles.append({
-                        'title': translated_title,
+                        'title': entry.get('title', '无标题'),
                         'url': entry.get('link', ''),
                         'source': feed_name,
                         'author': entry.get('author', feed_name),
