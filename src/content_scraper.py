@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""
+AI 内容抓取模块
+支持从 RSS feed 抓取最新 AI 资讯
+"""
+
+import feedparser
+import requests
+from datetime import datetime, timedelta
+from typing import List, Dict
+import yaml
+
+
+class ContentScraper:
+    def __init__(self, config_path: str = "../config/ai_bloggers.yaml"):
+        self.config = self.load_config(config_path)
+        self.since_days = 1  # 抓取最近 1 天的内容
+
+    def load_config(self, config_path: str) -> Dict:
+        """加载配置文件"""
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+
+    def scrape_rss_feeds(self) -> List[Dict]:
+        """抓取 RSS feeds"""
+        articles = []
+
+        for feed_config in self.config.get('rss_feeds', []):
+            try:
+                feed = feedparser.parse(feed_config['url'])
+
+                for entry in feed.entries[:5]:  # 每个 feed 取最新 5 条
+                    # 检查发布时间
+                    published = entry.get('published_parsed')
+                    if published:
+                        pub_date = datetime(*published[:6])
+                        if pub_date < datetime.now() - timedelta(days=self.since_days):
+                            continue
+
+                    articles.append({
+                        'title': entry.get('title', '无标题'),
+                        'url': entry.get('link', ''),
+                        'source': feed_config.get('name', '未知来源'),
+                        'author': entry.get('author', feed_config.get('name', '未知作者')),
+                        'published': entry.get('published', ''),
+                        'summary': entry.get('summary', '')[:200]
+                    })
+            except Exception as e:
+                print(f"❌ 抓取 {feed_config.get('name')} 失败: {e}")
+
+        return articles
+
+    def scrape_all(self) -> List[Dict]:
+        """抓取所有配置的内容源"""
+        all_articles = []
+
+        # 目前只实现 RSS 抓取
+        # TODO: 添加 Twitter 和 YouTube 抓取
+        all_articles.extend(self.scrape_rss_feeds())
+
+        # 按时间排序
+        all_articles.sort(key=lambda x: x.get('published', ''), reverse=True)
+
+        return all_articles
+
+
+def main():
+    """测试函数"""
+    scraper = ContentScraper()
+    articles = scraper.scrape_all()
+
+    print(f"📰 抓取到 {len(articles)} 篇文章:")
+    for article in articles:
+        print(f"\n标题: {article['title']}")
+        print(f"来源: {article['source']}")
+        print(f"链接: {article['url']}")
+
+
+if __name__ == "__main__":
+    main()

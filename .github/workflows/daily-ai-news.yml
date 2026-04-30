@@ -1,0 +1,36 @@
+name: Daily AI Content Scraper
+
+on:
+  schedule:
+    # 每天 10:00 AM (UTC+8) 执行 - GitHub Actions 使用 UTC 时间，所以设置为 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  scrape-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Scrape AI content and send notification
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_USER_OPEN_ID: ${{ secrets.FEISHU_USER_OPEN_ID }}
+        run: |
+          python src/main.py
+
+      - name: Keep workflow alive
+        run: echo "Job completed at $(date)"
