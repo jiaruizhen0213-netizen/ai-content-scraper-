@@ -111,57 +111,35 @@ class FeishuNotifier:
         return data
 
     def send_ai_news(self, articles: List[Dict]) -> dict:
-        """发送 AI 资讯消息卡片"""
-        elements = [
-            {
-                "tag": "div",
-                "text": {
-                    "content": f"📅 {datetime.now().strftime('%Y年%m月%d日')} AI 每日资讯",
-                    "tag": "lark_md"
-                }
-            },
-            {
-                "tag": "hr"
-            }
+        """发送 AI 资讯（文本格式）"""
+        if not articles:
+            content = f"📅 {datetime.now().strftime('%Y年%m月%d日')} AI 每日资讯\n\n暂无新内容更新"
+            return self.send_text_message(content)
+
+        # 构建文本消息
+        lines = [
+            f"📅 {datetime.now().strftime('%Y年%m月%d日')} AI 每日资讯",
+            f"📊 共 {len(articles)} 条更新",
+            ""
         ]
 
-        for article in articles[:10]:
-            elements.extend([
-                {
-                    "tag": "div",
-                    "text": {
-                        "content": f"### {article.get('title', '无标题')}",
-                        "tag": "lark_md"
-                    }
-                },
-                {
-                    "tag": "div",
-                    "text": {
-                        "content": f"📰 {article.get('source', '未知来源')} | 👤 {article.get('author', '未知作者')}",
-                        "tag": "lark_md"
-                    }
-                },
-                {
-                    "tag": "action",
-                    "actions": [
-                        {
-                            "tag": "button",
-                            "text": {
-                                "content": "查看原文",
-                                "tag": "plain_text"
-                            },
-                            "url": article.get('url', ''),
-                            "type": "default"
-                        }
-                    ]
-                },
-                {
-                    "tag": "hr"
-                }
-            ])
+        for i, article in enumerate(articles[:15], 1):  # 最多显示 15 条
+            title = article.get('title', '无标题')[:80]  # 限制标题长度
+            source = article.get('source', '未知来源')
+            url = article.get('url', '')
+
+            lines.append(f"{i}. {title}")
+            lines.append(f"   📰 {source}")
+            lines.append(f"   🔗 {url}")
+            lines.append("")
+
+        lines.append("——")
+        lines.append("由 GitHub Actions 自动推送 | 每天上午 10:00")
+
+        content = "\n".join(lines)
 
         print(f"📤 准备发送 {len(articles)} 条资讯")
-        return self.send_card_message(elements)
+        return self.send_text_message(content)
 
 
 def main():
