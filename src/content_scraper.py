@@ -19,7 +19,7 @@ class ContentScraper:
             script_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(script_dir, "../config/ai_bloggers.yaml")
         self.config = self.load_config(config_path)
-        self.since_days = 1  # 抓取最近 1 天的内容
+        self.since_days = 7  # 抓取最近 7 天的内容
 
     def load_config(self, config_path: str) -> Dict:
         """加载配置文件"""
@@ -30,11 +30,19 @@ class ContentScraper:
         """抓取 RSS feeds"""
         articles = []
 
+        print(f"📰 开始抓取 RSS feeds (最近 {self.since_days} 天)...")
+
         for feed_config in self.config.get('rss_feeds', []):
             try:
-                feed = feedparser.parse(feed_config['url'])
+                feed_name = feed_config.get('name', '未知来源')
+                feed_url = feed_config['url']
 
-                for entry in feed.entries[:5]:  # 每个 feed 取最新 5 条
+                print(f"   抓取: {feed_name}...")
+
+                feed = feedparser.parse(feed_url)
+
+                feed_articles = 0
+                for entry in feed.entries[:10]:  # 每个 feed 取最新 10 条
                     # 检查发布时间
                     published = entry.get('published_parsed')
                     if published:
@@ -45,14 +53,19 @@ class ContentScraper:
                     articles.append({
                         'title': entry.get('title', '无标题'),
                         'url': entry.get('link', ''),
-                        'source': feed_config.get('name', '未知来源'),
-                        'author': entry.get('author', feed_config.get('name', '未知作者')),
+                        'source': feed_name,
+                        'author': entry.get('author', feed_name),
                         'published': entry.get('published', ''),
                         'summary': entry.get('summary', '')[:200]
                     })
-            except Exception as e:
-                print(f"❌ 抓取 {feed_config.get('name')} 失败: {e}")
+                    feed_articles += 1
 
+                print(f"      ✅ 获取 {feed_articles} 篇文章")
+
+            except Exception as e:
+                print(f"      ❌ 抓取 {feed_config.get('name')} 失败: {e}")
+
+        print(f"📰 总共抓取 {len(articles)} 篇文章")
         return articles
 
     def scrape_all(self) -> List[Dict]:

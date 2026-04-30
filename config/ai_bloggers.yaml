@@ -8,12 +8,6 @@ twitter_accounts:
   - handle: "ylecun"
     name: "Yann LeCun"
     description: "Meta 首席 AI 科学家，图灵奖得主"
-  - handle: "goodfellow_ian"
-    name: "Ian Goodfellow"
-    description: "GAN 发明者"
-  - handle: "Karpathy"
-    name: "Andrej Karpathy"
-    description: "OpenAI 创始成员，前 Tesla AI 总监"
   - handle: "hardmaru"
     name: "David Ha"
     description: "Google Brain 研究员"
@@ -22,17 +16,52 @@ youtube_channels:
   - channel_id: "UCBa659QWEk1AI4Tg--mrJ2A"
     name: "Sam Altman"
     description: "OpenAI CEO"
-  - channel_id: "UC8butISFwT-Wl7EV0hUK0BQ"
-    name: "Andrej Karpathy"
-    description: "AI 教育内容"
 
+# RSS 源（目前主要使用这个）
 rss_feeds:
+  # 官方博客
   - url: "https://openai.com/blog/rss.xml"
     name: "OpenAI Blog"
     description: "OpenAI 官方博客"
+
   - url: "https://blog.google/technology/ai/rss/"
     name: "Google AI Blog"
     description: "Google AI 官方博客"
+
   - url: "https://deepmind.google/blog/feed/"
     name: "DeepMind Blog"
     description: "DeepMind 官方博客"
+
+  - url: "https://blogs.microsoft.com/ai/rss.xml"
+    name: "Microsoft AI Blog"
+    description: "微软 AI 博客"
+
+  - url: "https://research.fb.com/feed/"
+    name: "Meta AI Research"
+    description: "Meta AI 研究博客"
+
+  - url: "https://www.anthropic.com/index/rss"
+    name: "Anthropic"
+    description: "Anthropic 官方博客"
+
+  # AI 媒体
+  - url: "https://venturebeat.com/ai/feed/"
+    name: "VentureBeat AI"
+    description: "VentureBeat AI 新闻"
+
+  - url: "https://artificialintelligence-news.com/feed/"
+    name: "AI News"
+    description: "AI 新闻网站"
+
+  - url: "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"
+    name: "The Verge AI"
+    description: "The Verge AI 版块"
+
+  # 技术博客
+  - url: "https://juliuszhk.wordpress.com/feed/"
+    name: "Julius's Blog"
+    description: "AI 研究员博客"
+
+  - url: "https://sebastianraschka.com/feed.xml"
+    name: "Sebastian Raschka"
+    description: "AI/ML 研究员"
