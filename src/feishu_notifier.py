@@ -20,14 +20,14 @@ class FeishuNotifier:
         self.api_base = "https://open.feishu.cn/open-apis"
 
     def get_tenant_access_token(self) -> str:
-        """获取 tenant_access_token"""
-        url = f"{self.api_base}/auth/v3/tenant_access_token/internal"
+        """获取 app_access_token (自建应用)"""
+        url = f"{self.api_base}/auth/v3/app_access_token/internal"
         payload = {
             "app_id": self.app_id,
             "app_secret": self.app_secret
         }
 
-        print(f"🔑 正在获取飞书 access_token...")
+        print(f"🔑 正在获取飞书 app_access_token...")
         print(f"   App ID: {self.app_id[:10]}...")
 
         response = requests.post(url, json=payload)
@@ -41,9 +41,9 @@ class FeishuNotifier:
             print(f"   错误码: {data.get('code')}")
             print(f"   错误信息: {error_msg}")
             print(f"   完整响应: {data}")
-            raise Exception(f"Failed to get tenant_access_token: {data}")
+            raise Exception(f"Failed to get app_access_token: {data}")
 
-        self.tenant_access_token = data.get("tenant_access_token")
+        self.tenant_access_token = data.get("app_access_token")
         print(f"✅ 获取 token 成功")
         return self.tenant_access_token
 
