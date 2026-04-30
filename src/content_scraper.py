@@ -9,10 +9,15 @@ import requests
 from datetime import datetime, timedelta
 from typing import List, Dict
 import yaml
+import os
 
 
 class ContentScraper:
-    def __init__(self, config_path: str = "../config/ai_bloggers.yaml"):
+    def __init__(self, config_path: str = None):
+        if config_path is None:
+            # 自动定位配置文件路径
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(script_dir, "../config/ai_bloggers.yaml")
         self.config = self.load_config(config_path)
         self.since_days = 1  # 抓取最近 1 天的内容
 

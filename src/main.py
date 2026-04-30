@@ -8,6 +8,10 @@ import os
 import sys
 from datetime import datetime
 
+# 添加当前目录到 Python 路径，确保能正确导入模块
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
 from content_scraper import ContentScraper
 from feishu_notifier import FeishuNotifier
 
